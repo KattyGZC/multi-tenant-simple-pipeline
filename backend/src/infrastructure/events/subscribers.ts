@@ -3,13 +3,29 @@ import { appEmitter, EVENTS } from './emitter';
 import { prisma } from '../../config/database';
 import { CandidateMovedEvent } from '../../domain/types';
 
-const WEBHOOK_URL = process.env.WEBHOOK_URL ?? 'https://webhook.site/your-unique-url-here';
+const WEBHOOK_URL = process.env.WEBHOOK_URL ?? 'https://webhook.site/318dfc8d-cebf-4376-b49c-a38021c5d86e';
 const MAX_ATTEMPTS = 3;
 
 // ─── Subscriber 1: NEW → REVIEWING ────────────────────────────────────────────
 // Simulates sending a welcome questionnaire email to the candidate.
 
 async function handleWelcomeQuestionnaire(data: CandidateMovedEvent): Promise<void> {
+  // Deduplication: only send once per candidate, regardless of re-entries
+  const alreadySent = await prisma.actionLog.findFirst({
+    where: {
+      actionName: 'Welcome Questionnaire Sent',
+      status: 'SUCCESS',
+      transition: { candidateId: data.candidateId },
+    },
+  });
+
+  if (alreadySent) {
+    console.log(
+      `[Action] Welcome questionnaire already sent to ${data.candidateName}, skipping.`,
+    );
+    return;
+  }
+
   const log = await prisma.actionLog.create({
     data: {
       transitionId: data.transitionId,
