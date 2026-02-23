@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum StageKey {
+  NEW
+  REVIEWING
+  ACCEPTED
+  REJECTED
+}
+
+enum ActionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model Organization {
+  id                 String              @id @default(uuid())
+  name               String
+  candidates         Candidate[]
+  allowedTransitions AllowedTransition[]
+}
+
+model Stage {
+  id    String   @id @default(uuid())
+  key   StageKey @unique
+  title String
+  order Int
+
+  candidates             Candidate[]
+  fromAllowedTransitions AllowedTransition[] @relation("FromStage")
+  toAllowedTransitions   AllowedTransition[] @relation("ToStage")
+  fromTransitions        Transition[]        @relation("TransitionFrom")
+  toTransitions          Transition[]        @relation("TransitionTo")
+}
+
+model AllowedTransition {
+  id             String       @id @default(uuid())
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  fromStage      Stage        @relation("FromStage", fields: [fromStageId], references: [id])
+  fromStageId    String
+  toStage        Stage        @relation("ToStage", fields: [toStageId], references: [id])
+  toStageId      String
+
+  @@unique([organizationId, fromStageId, toStageId])
+}
+
+model Candidate {
+  id           String       @id @default(uuid())
+  name         String
+  email        String
+  organization Organization @relation(fields: [orgId], references: [id])
+  orgId        String
+  stage        Stage        @relation(fields: [stageId], references: [id])
+  stageId      String
+  transitions  Transition[]
+  createdAt    DateTime     @default(now())
+}
+
+model Transition {
+  id          String      @id @default(uuid())
+  candidate   Candidate   @relation(fields: [candidateId], references: [id])
+  candidateId String
+  fromStage   Stage       @relation("TransitionFrom", fields: [fromStageId], references: [id])
+  fromStageId String
+  toStage     Stage       @relation("TransitionTo", fields: [toStageId], references: [id])
+  toStageId   String
+  note        String?
+  createdAt   DateTime    @default(now())
+  actionLogs  ActionLog[]
+}
+
+model ActionLog {
+  id           String       @id @default(uuid())
+  transition   Transition   @relation(fields: [transitionId], references: [id])
+  transitionId String
+  actionName   String
+  status       ActionStatus @default(PENDING)
+  errorMessage String?
+  attemptCount Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
