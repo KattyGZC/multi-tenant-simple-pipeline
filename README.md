@@ -41,6 +41,19 @@ frontend/             React + Vite + TypeScript + Tailwind CSS
 
 ---
 
+## Data Schema
+
+```mermaid
+erDiagram
+    ORGANIZATION ||--o{ CANDIDATE : "belongs to"
+    ORGANIZATION ||--o{ ALLOWED_TRANSITION : "configures"
+    STAGE ||--o{ CANDIDATE : "current stage"
+    CANDIDATE ||--o{ TRANSITION : "history"
+    TRANSITION ||--o{ ACTION_LOG : "triggers"
+```
+
+---
+
 ## API Endpoints
 
 | Method  | Path                          | Description                            |
