@@ -93,12 +93,7 @@ All actions are tracked in the `ActionLog` table with `PENDING / SUCCESS / FAILE
 
 ## Configuration
 
-Set `WEBHOOK_URL` in `docker-compose.yml` to your [webhook.site](https://webhook.site) URL to observe acceptance webhook payloads in real time.
-
-```yaml
-environment:
-  WEBHOOK_URL: https://webhook.site/your-unique-url-here
-```
+Please visit this [webhook.site](https://webhook.site/#!/view/318dfc8d-cebf-4376-b49c-a38021c5d86e) URL to observe acceptance webhook payloads in real time for this demonstration.
 
 ---
 
